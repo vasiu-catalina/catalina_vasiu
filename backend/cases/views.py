@@ -1,5 +1,7 @@
 import json
 
+from django.db import connection
+from django.db.utils import OperationalError
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -42,3 +44,27 @@ class AirportLookupView(APIView):
 		except AirportLookupError as exc:
 			return Response({'detail': str(exc)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 		return Response({'results': results})
+
+
+class HealthCheckView(APIView):
+	def get(self, request):
+		try:
+			with connection.cursor() as cursor:
+				cursor.execute('SELECT 1')
+		except OperationalError:
+			return Response(
+				{
+					'status': 'error',
+					'backend': 'ok',
+					'database': 'error',
+				},
+				status=status.HTTP_503_SERVICE_UNAVAILABLE,
+			)
+
+		return Response(
+			{
+				'status': 'ok',
+				'backend': 'ok',
+				'database': 'ok',
+			}
+		)

@@ -2,6 +2,7 @@ import json
 from datetime import timedelta
 from unittest.mock import patch
 
+from django.db.utils import OperationalError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
@@ -71,6 +72,27 @@ class CaseApiTests(TestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertIn('payload', response.data)
+
+    def test_health_check_returns_backend_and_database_ok(self):
+        response = self.client.get(reverse('health-check'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.data,
+            {
+                'status': 'ok',
+                'backend': 'ok',
+                'database': 'ok',
+            },
+        )
+
+    @patch('cases.views.connection.cursor', side_effect=OperationalError())
+    def test_health_check_returns_service_unavailable_when_database_is_down(self, _mock_cursor):
+        response = self.client.get(reverse('health-check'))
+
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.data['backend'], 'ok')
+        self.assertEqual(response.data['database'], 'error')
 
     @patch('cases.views.search_airports')
     def test_airport_lookup_returns_normalized_results(self, mock_search_airports):
