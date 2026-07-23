@@ -46,17 +46,33 @@ def build_payload():
     }
 
 
+def airport_lookup_side_effect(query):
+    code = query.strip().upper()
+    if code in {'CLJ', 'OTP', 'FRA'}:
+        return [
+            {
+                'code': code,
+                'name': f'{code} Airport',
+                'city': 'Test City',
+                'country': 'Test Country',
+                'label': f'{code} - {code} Airport / Test City / Test Country',
+            }
+        ]
+    return []
+
+
 class CaseApiTests(TestCase):
     def setUp(self):
         self.client = APIClient()
 
-    def test_create_case_persists_nested_records(self):
+    @patch('cases.serializers.search_airports', side_effect=airport_lookup_side_effect)
+    def test_create_case_persists_nested_records(self, _mock_search_airports):
         response = self.client.post(
             reverse('case-create'),
             data={
                 'payload': json.dumps(build_payload()),
                 'boarding_pass': SimpleUploadedFile('boarding-pass.pdf', b'pdf-content', content_type='application/pdf'),
-                'identity_document': SimpleUploadedFile('passport.jpg', b'jpg-content', content_type='image/jpeg'),
+                'identity_document': SimpleUploadedFile('passport.png', b'png-content', content_type='image/png'),
             },
             format='multipart',
         )
@@ -66,6 +82,34 @@ class CaseApiTests(TestCase):
         self.assertEqual(Case.objects.count(), 1)
         self.assertEqual(Case.objects.get().flight_segments.count(), 1)
         self.assertEqual(Case.objects.get().documents.count(), 2)
+
+    @patch('cases.serializers.search_airports', side_effect=airport_lookup_side_effect)
+    def test_create_case_rejects_invalid_connection_topology(self, _mock_search_airports):
+        payload = build_payload()
+        payload['flight_segments'].append(
+            {
+                **payload['flight_segments'][0],
+                'sequence': 2,
+                'flight_number': 'RO102',
+                'departing_airport_code': 'OTP',
+                'destination_airport_code': 'FRA',
+                'is_connection': False,
+                'is_problem_flight': False,
+            }
+        )
+
+        response = self.client.post(
+            reverse('case-create'),
+            data={
+                'payload': json.dumps(payload),
+                'boarding_pass': SimpleUploadedFile('boarding-pass.pdf', b'pdf-content', content_type='application/pdf'),
+                'identity_document': SimpleUploadedFile('passport.png', b'png-content', content_type='image/png'),
+            },
+            format='multipart',
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('flight_segments', response.data)
 
     def test_create_case_rejects_invalid_json_payload(self):
         response = self.client.post(reverse('case-create'), data={'payload': '{not-json'}, format='multipart')

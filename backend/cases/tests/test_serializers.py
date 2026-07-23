@@ -1,5 +1,6 @@
 from copy import deepcopy
 from datetime import timedelta
+from unittest.mock import patch
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
@@ -44,17 +45,34 @@ def build_payload():
 def build_documents():
     return {
         'boarding_pass': SimpleUploadedFile('boarding-pass.pdf', b'pdf-content', content_type='application/pdf'),
-        'identity_document': SimpleUploadedFile('passport.jpg', b'jpg-content', content_type='image/jpeg'),
+        'identity_document': SimpleUploadedFile('passport.png', b'png-content', content_type='image/png'),
     }
 
 
+def airport_lookup_side_effect(query):
+    code = query.strip().upper()
+    if code in {'CLJ', 'OTP', 'FRA'}:
+        return [
+            {
+                'code': code,
+                'name': f'{code} Airport',
+                'city': 'Test City',
+                'country': 'Test Country',
+                'label': f'{code} - {code} Airport / Test City / Test Country',
+            }
+        ]
+    return []
+
+
 class CaseCreateSerializerTests(TestCase):
-    def test_serializer_accepts_valid_payload(self):
+    @patch('cases.serializers.search_airports', side_effect=airport_lookup_side_effect)
+    def test_serializer_accepts_valid_payload(self, _mock_search_airports):
         serializer = CaseCreateSerializer(data=build_payload(), context={'documents': build_documents()})
 
         self.assertTrue(serializer.is_valid(), serializer.errors)
 
-    def test_serializer_rejects_more_than_four_connections(self):
+    @patch('cases.serializers.search_airports', side_effect=airport_lookup_side_effect)
+    def test_serializer_rejects_more_than_four_connections(self, _mock_search_airports):
         payload = build_payload()
         base_segment = payload['flight_segments'][0]
         payload['flight_segments'] = [
@@ -66,7 +84,29 @@ class CaseCreateSerializerTests(TestCase):
         self.assertFalse(serializer.is_valid())
         self.assertIn('flight_segments', serializer.errors)
 
-    def test_serializer_rejects_missing_problem_flight(self):
+    @patch('cases.serializers.search_airports', side_effect=airport_lookup_side_effect)
+    def test_serializer_rejects_invalid_connection_topology(self, _mock_search_airports):
+        payload = build_payload()
+        base_segment = payload['flight_segments'][0]
+        payload['flight_segments'].append(
+            {
+                **deepcopy(base_segment),
+                'sequence': 2,
+                'flight_number': 'RO102',
+                'departing_airport_code': 'OTP',
+                'destination_airport_code': 'FRA',
+                'is_connection': False,
+                'is_problem_flight': False,
+            }
+        )
+
+        serializer = CaseCreateSerializer(data=payload, context={'documents': build_documents()})
+
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('flight_segments', serializer.errors)
+
+    @patch('cases.serializers.search_airports', side_effect=airport_lookup_side_effect)
+    def test_serializer_rejects_missing_problem_flight(self, _mock_search_airports):
         payload = build_payload()
         payload['flight_segments'][0]['is_problem_flight'] = False
         serializer = CaseCreateSerializer(data=payload, context={'documents': build_documents()})
@@ -74,7 +114,8 @@ class CaseCreateSerializerTests(TestCase):
         self.assertFalse(serializer.is_valid())
         self.assertIn('flight_segments', serializer.errors)
 
-    def test_serializer_rejects_missing_gdpr_consent(self):
+    @patch('cases.serializers.search_airports', side_effect=airport_lookup_side_effect)
+    def test_serializer_rejects_missing_gdpr_consent(self, _mock_search_airports):
         payload = build_payload()
         payload['gdpr_consent'] = False
         serializer = CaseCreateSerializer(data=payload, context={'documents': build_documents()})
@@ -82,9 +123,20 @@ class CaseCreateSerializerTests(TestCase):
         self.assertFalse(serializer.is_valid())
         self.assertIn('gdpr_consent', serializer.errors)
 
-    def test_serializer_rejects_unsupported_document_type(self):
+    @patch('cases.serializers.search_airports', side_effect=airport_lookup_side_effect)
+    def test_serializer_rejects_airport_codes_not_returned_by_lookup(self, _mock_search_airports):
+        payload = build_payload()
+        payload['flight_segments'][0]['departing_airport_code'] = 'ZZZ'
+
+        serializer = CaseCreateSerializer(data=payload, context={'documents': build_documents()})
+
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('departing_airport_code', serializer.errors['flight_segments'][0])
+
+    @patch('cases.serializers.search_airports', side_effect=airport_lookup_side_effect)
+    def test_serializer_rejects_unsupported_document_type(self, _mock_search_airports):
         documents = build_documents()
-        documents['identity_document'] = SimpleUploadedFile('passport.png', b'png-content', content_type='image/png')
+        documents['identity_document'] = SimpleUploadedFile('passport.gif', b'gif-content', content_type='image/gif')
         serializer = CaseCreateSerializer(data=build_payload(), context={'documents': documents})
 
         self.assertFalse(serializer.is_valid())

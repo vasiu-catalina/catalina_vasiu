@@ -6,12 +6,13 @@ import type { AirportOption } from '../types'
 interface AirportAutocompleteProps {
   label: string
   value: string
-  onChange: (value: string) => void
+  onInputChange: (value: string) => void
+  onOptionSelect: (value: string) => void
   error?: string
   hint?: string
 }
 
-export function AirportAutocomplete({ label, value, onChange, error, hint }: AirportAutocompleteProps) {
+export function AirportAutocomplete({ label, value, onInputChange, onOptionSelect, error, hint }: AirportAutocompleteProps) {
   const [results, setResults] = useState<AirportOption[]>([])
   const [loading, setLoading] = useState(false)
 
@@ -54,7 +55,7 @@ export function AirportAutocomplete({ label, value, onChange, error, hint }: Air
       <input
         aria-label={label}
         value={value}
-        onChange={(event) => onChange(event.target.value.toUpperCase())}
+        onChange={(event) => onInputChange(event.target.value.toUpperCase())}
         placeholder="Type an IATA code"
       />
       {hint ? <p className="field-hint">{hint}</p> : null}
@@ -66,7 +67,10 @@ export function AirportAutocomplete({ label, value, onChange, error, hint }: Air
               key={`${option.code}-${option.label}`}
               type="button"
               className="suggestion-button"
-              onClick={() => onChange(option.code)}
+              onClick={() => {
+                onOptionSelect(option.code)
+                setResults([])
+              }}
             >
               {option.label}
             </button>

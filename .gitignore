@@ -8,4 +8,7 @@ backend/test.sqlite3
 frontend/node_modules/
 frontend/dist/
 frontend/.vite/
+frontend/test-results/
+frontend/playwright-report/
+backend/package-lock.json
 .DS_Store

@@ -6,9 +6,26 @@ from django.utils import timezone
 from rest_framework import serializers
 
 from .models import Case, CaseStatus, Document, DocumentType, FlightSegment, Passenger, validate_file_size
+from .services.airportgap import AirportLookupError, search_airports
 
 
 phone_validator = RegexValidator(regex=r'^\+?[0-9\-\s]{7,20}$', message='Enter a valid phone number.')
+
+
+def validate_airport_code_from_lookup(field_name: str, code: str) -> str:
+    normalized_code = code.strip().upper()
+    if len(normalized_code) != 3 or not normalized_code.isalpha():
+        raise serializers.ValidationError({field_name: 'Select a valid airport code from the lookup results.'})
+
+    try:
+        results = search_airports(normalized_code)
+    except AirportLookupError as exc:
+        raise serializers.ValidationError({field_name: str(exc)}) from exc
+
+    if not any(result['code'] == normalized_code for result in results):
+        raise serializers.ValidationError({field_name: 'Select a valid airport code from the lookup results.'})
+
+    return normalized_code
 
 
 class PassengerSerializer(serializers.ModelSerializer):
@@ -53,8 +70,8 @@ class FlightSegmentSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         if attrs['planned_arrival_time'] <= attrs['planned_departure_time']:
             raise serializers.ValidationError('Planned arrival time must be after planned departure time.')
-        attrs['departing_airport_code'] = attrs['departing_airport_code'].upper()
-        attrs['destination_airport_code'] = attrs['destination_airport_code'].upper()
+        attrs['departing_airport_code'] = validate_airport_code_from_lookup('departing_airport_code', attrs['departing_airport_code'])
+        attrs['destination_airport_code'] = validate_airport_code_from_lookup('destination_airport_code', attrs['destination_airport_code'])
         return attrs
 
 
@@ -100,8 +117,18 @@ class CaseCreateSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         flight_segments = attrs['flight_segments']
+        if not flight_segments:
+            raise serializers.ValidationError({'flight_segments': 'At least one flight segment is required.'})
+
+        sequences = [segment['sequence'] for segment in flight_segments]
         connections = [segment for segment in flight_segments if segment['is_connection']]
         problem_flights = [segment for segment in flight_segments if segment['is_problem_flight']]
+        if sequences != list(range(1, len(flight_segments) + 1)):
+            raise serializers.ValidationError({'flight_segments': 'Flight segments must be submitted in sequence order.'})
+        if flight_segments[0]['is_connection']:
+            raise serializers.ValidationError({'flight_segments': 'The first flight segment must be the primary itinerary leg.'})
+        if any(segment['is_connection'] != (segment['sequence'] > 1) for segment in flight_segments):
+            raise serializers.ValidationError({'flight_segments': 'Only flight segments after the first may be marked as connections.'})
         if len(connections) > 4:
             raise serializers.ValidationError({'flight_segments': 'A case can include at most 4 connecting flights.'})
         if len(problem_flights) != 1:
@@ -137,8 +164,8 @@ class CaseCreateSerializer(serializers.Serializer):
         for field_name in ('boarding_pass', 'identity_document'):
             uploaded_file = self.context['documents'][field_name]
             extension = Path(uploaded_file.name).suffix.lower().lstrip('.')
-            if extension not in {'pdf', 'jpg', 'jpeg'}:
-                raise serializers.ValidationError({field_name: 'Allowed file types are PDF, JPG, and JPEG.'})
+            if extension not in {'pdf', 'png', 'jpg', 'jpeg'}:
+                raise serializers.ValidationError({field_name: 'Allowed file types are PDF, PNG, JPG, and JPEG.'})
             try:
                 validate_file_size(uploaded_file)
             except DjangoValidationError as exc:

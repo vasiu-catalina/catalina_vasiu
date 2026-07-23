@@ -28,7 +28,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('document_type', models.CharField(choices=[('BOARDING_PASS', 'Boarding pass'), ('IDENTITY_DOCUMENT', 'Identity document')], max_length=32)),
-                ('file', models.FileField(upload_to='case_documents/', validators=[FileExtensionValidator(['pdf', 'jpg', 'jpeg']), cases.models.validate_file_size])),
+                ('file', models.FileField(upload_to='case_documents/', validators=[FileExtensionValidator(['pdf', 'png', 'jpg', 'jpeg']), cases.models.validate_file_size])),
                 ('uploaded_at', models.DateTimeField(auto_now_add=True)),
                 ('case', models.ForeignKey(on_delete=models.deletion.CASCADE, related_name='documents', to='cases.case')),
             ],

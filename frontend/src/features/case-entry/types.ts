@@ -11,7 +11,9 @@ export interface FlightSegmentFormValues {
   flightNumber: string
   airline: string
   departingAirportCode: string
+  departingAirportVerified: boolean
   destinationAirportCode: string
+  destinationAirportVerified: boolean
   plannedDepartureTime: string
   plannedArrivalTime: string
 }

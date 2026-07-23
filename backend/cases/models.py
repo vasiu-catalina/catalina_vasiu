@@ -74,7 +74,7 @@ class Document(models.Model):
 	file = models.FileField(
 		upload_to='case_documents/',
 		validators=[
-			FileExtensionValidator(['pdf', 'jpg', 'jpeg']),
+			FileExtensionValidator(['pdf', 'png', 'jpg', 'jpeg']),
 			validate_file_size,
 		],
 	)

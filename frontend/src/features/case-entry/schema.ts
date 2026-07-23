@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 const maxDocumentSize = 5 * 1024 * 1024
-const acceptedFileTypes = ['pdf', 'jpg', 'jpeg']
+const acceptedFileTypes = ['pdf', 'png', 'jpg', 'jpeg']
 const consentDecisionSchema = z.enum(['agree', 'disagree'])
 
 const flightSchema = z
@@ -10,7 +10,9 @@ const flightSchema = z
     flightNumber: z.string().trim().min(1, 'Flight number is required.'),
     airline: z.string().trim().min(1, 'Airline is required.'),
     departingAirportCode: z.string().trim().min(3, 'Departing airport code is required.'),
+    departingAirportVerified: z.boolean(),
     destinationAirportCode: z.string().trim().min(3, 'Destination airport code is required.'),
+    destinationAirportVerified: z.boolean(),
     plannedDepartureTime: z.string().min(1, 'Planned departure time is required.'),
     plannedArrivalTime: z.string().min(1, 'Planned arrival time is required.'),
   })
@@ -24,6 +26,22 @@ const flightSchema = z
         code: z.ZodIssueCode.custom,
         message: 'Planned arrival time must be after planned departure time.',
         path: ['plannedArrivalTime'],
+      })
+    }
+
+    if (!value.departingAirportVerified) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Select a valid airport code from the lookup results.',
+        path: ['departingAirportCode'],
+      })
+    }
+
+    if (!value.destinationAirportVerified) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Select a valid airport code from the lookup results.',
+        path: ['destinationAirportCode'],
       })
     }
   })
@@ -43,7 +61,7 @@ function documentSchema(label: string) {
       if (!acceptedFileTypes.includes(extension)) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: 'Allowed file types are PDF, JPG, and JPEG.',
+          message: 'Allowed file types are PDF, PNG, JPG, and JPEG.',
         })
       }
 
@@ -61,7 +79,7 @@ export const CaseEntryFormSchema = z
     reservationNumber: z.string().trim().min(1, 'Reservation number is required.'),
     flights: z.array(flightSchema).min(1).max(5, 'You can add up to 4 connecting flights.'),
     problemFlightIndex: z.coerce.number().int().min(0, 'Select the problem flight.'),
-    privacyDecision: consentDecisionSchema,
+    gdprConsent: z.boolean(),
     updatesDecision: consentDecisionSchema,
     passenger: z.object({
       firstName: z.string().trim().min(1, 'First name is required.'),
@@ -78,11 +96,11 @@ export const CaseEntryFormSchema = z
     identityDocument: documentSchema('Identity document'),
   })
   .superRefine((value, ctx) => {
-    if (value.privacyDecision !== 'agree') {
+    if (!value.gdprConsent) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: 'You must agree to the GDPR policy before submitting.',
-        path: ['privacyDecision'],
+        path: ['gdprConsent'],
       })
     }
 
@@ -102,7 +120,9 @@ export const emptyFlight = {
   flightNumber: '',
   airline: '',
   departingAirportCode: '',
+  departingAirportVerified: false,
   destinationAirportCode: '',
+  destinationAirportVerified: false,
   plannedDepartureTime: '',
   plannedArrivalTime: '',
 }

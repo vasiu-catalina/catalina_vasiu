@@ -30,7 +30,7 @@ async function fillValidCase(page: Page) {
   await page.getByRole('radio', { name: 'Mark segment 1 as the problem flight' }).check()
 
   await page.getByLabel('Email').fill('playwright.case01@example.com')
-  await page.getByRole('group', { name: 'GDPR policy decision' }).getByLabel('Agree', { exact: true }).check()
+  await page.getByLabel('I agree to the GDPR policy.').check()
   await page.getByRole('group', { name: 'Receive case updates by email' }).getByLabel('Agree', { exact: true }).check()
 
   await page.getByLabel('First name').fill('Ana')
@@ -46,9 +46,9 @@ async function fillValidCase(page: Page) {
     buffer: Buffer.from('%PDF-1.4\n% Playwright fixture\n'),
   })
   await page.getByLabel('ID or passport').setInputFiles({
-    name: 'passport.jpg',
-    mimeType: 'image/jpeg',
-    buffer: Buffer.from('fake-jpeg-content'),
+    name: 'passport.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from('fake-png-content'),
   })
 
   return reservationNumber
@@ -74,6 +74,8 @@ test.beforeAll(async () => {
 test('shows browser validation when required fields are missing', async ({ page }) => {
   await page.goto('/')
 
+  await expect(page.getByRole('button', { name: 'Create compensation case' })).toBeDisabled()
+  await page.getByLabel('I agree to the GDPR policy.').check()
   await page.getByRole('button', { name: 'Create compensation case' }).click()
 
   await expect(page.getByText('Reservation number is required.')).toBeVisible()

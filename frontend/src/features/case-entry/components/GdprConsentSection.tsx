@@ -33,20 +33,13 @@ export function GdprConsentSection({ register, errors }: GdprConsentSectionProps
       </div>
 
       <div className="choice-grid" style={{ marginTop: '18px' }}>
-        <fieldset className="field">
-          <legend>GDPR policy decision</legend>
-          <div className="choice-row">
-            <label className="choice-card">
-              <input type="radio" value="agree" {...register('privacyDecision')} />
-              Agree
-            </label>
-            <label className="choice-card">
-              <input type="radio" value="disagree" {...register('privacyDecision')} />
-              Disagree
-            </label>
-          </div>
-          {errors.privacyDecision ? <p className="field-error">{errors.privacyDecision.message}</p> : null}
-        </fieldset>
+        <div className="field">
+          <label className="choice-card" htmlFor="gdpr-consent">
+            <input id="gdpr-consent" type="checkbox" {...register('gdprConsent')} />
+            I agree to the GDPR policy.
+          </label>
+          {errors.gdprConsent ? <p className="field-error">{errors.gdprConsent.message}</p> : null}
+        </div>
 
         <fieldset className="field">
           <legend>Receive case updates by email</legend>

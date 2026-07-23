@@ -15,7 +15,7 @@ const defaultValues: CaseEntryFormValues = {
   reservationNumber: '',
   flights: [emptyFlight],
   problemFlightIndex: 0,
-  privacyDecision: 'disagree',
+  gdprConsent: false,
   updatesDecision: 'disagree',
   passenger: {
     firstName: '',
@@ -51,6 +51,7 @@ export function CaseEntryForm() {
   const [submitError, setSubmitError] = useState<string | null>(null)
 
   const problemFlightIndex = watch('problemFlightIndex')
+  const gdprConsent = watch('gdprConsent')
 
   function handleAddConnection() {
     if (fields.length < 5) {
@@ -84,7 +85,7 @@ export function CaseEntryForm() {
     setSubmitError(null)
     const payload = {
       reservation_number: values.reservationNumber,
-      gdpr_consent: values.privacyDecision === 'agree',
+      gdpr_consent: values.gdprConsent,
       updates_consent: values.updatesDecision === 'agree',
       passenger: {
         first_name: values.passenger.firstName,
@@ -166,6 +167,7 @@ export function CaseEntryForm() {
           onAddConnection={handleAddConnection}
           onRemoveConnection={handleRemoveConnection}
           register={register}
+          setValue={setValue}
         />
 
         <section className="section-card is-muted">
@@ -227,7 +229,7 @@ export function CaseEntryForm() {
         <DocumentUploadSection register={register} errors={errors} />
 
         <div className="button-row">
-          <button type="submit" className="button" disabled={isSubmitting}>
+          <button type="submit" className="button" disabled={isSubmitting || !gdprConsent}>
             {isSubmitting ? 'Submitting case…' : 'Create compensation case'}
           </button>
         </div>

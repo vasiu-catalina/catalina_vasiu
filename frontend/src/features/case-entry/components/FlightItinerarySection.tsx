@@ -1,4 +1,4 @@
-import { Controller, type Control, type FieldErrors, type UseFormRegister } from 'react-hook-form'
+import { Controller, type Control, type FieldErrors, type UseFormRegister, type UseFormSetValue } from 'react-hook-form'
 
 import { AirportAutocomplete } from './AirportAutocomplete'
 import type { CaseEntryFormValues } from '../types'
@@ -10,6 +10,7 @@ interface FlightItinerarySectionProps {
   onAddConnection: () => void
   onRemoveConnection: (index: number) => void
   register: UseFormRegister<CaseEntryFormValues>
+  setValue: UseFormSetValue<CaseEntryFormValues>
 }
 
 export function FlightItinerarySection({
@@ -19,6 +20,7 @@ export function FlightItinerarySection({
   onAddConnection,
   onRemoveConnection,
   register,
+  setValue,
 }: FlightItinerarySectionProps) {
   return (
     <section className="section-card">
@@ -92,7 +94,14 @@ export function FlightItinerarySection({
                   <AirportAutocomplete
                     label="Departing airport code"
                     value={field.value}
-                    onChange={field.onChange}
+                    onInputChange={(value) => {
+                      field.onChange(value)
+                      setValue(`flights.${index}.departingAirportVerified`, false, { shouldDirty: true, shouldValidate: true })
+                    }}
+                    onOptionSelect={(value) => {
+                      field.onChange(value)
+                      setValue(`flights.${index}.departingAirportVerified`, true, { shouldDirty: true, shouldValidate: true })
+                    }}
                     hint="Enter at least 2 letters to fetch code suggestions."
                     error={segmentErrors?.departingAirportCode?.message}
                   />
@@ -105,7 +114,14 @@ export function FlightItinerarySection({
                   <AirportAutocomplete
                     label="Destination airport code"
                     value={field.value}
-                    onChange={field.onChange}
+                    onInputChange={(value) => {
+                      field.onChange(value)
+                      setValue(`flights.${index}.destinationAirportVerified`, false, { shouldDirty: true, shouldValidate: true })
+                    }}
+                    onOptionSelect={(value) => {
+                      field.onChange(value)
+                      setValue(`flights.${index}.destinationAirportVerified`, true, { shouldDirty: true, shouldValidate: true })
+                    }}
                     error={segmentErrors?.destinationAirportCode?.message}
                   />
                 )}

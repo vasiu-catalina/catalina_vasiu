@@ -74,7 +74,7 @@ Playwright uses the following optional environment variables for local overrides
 - Required-field validation across itinerary, contact, passenger, GDPR, and document inputs.
 - Up to four connecting flights and one mandatory problem-flight selection.
 - Airport code lookup through a backend proxy for AirportGap.
-- Boarding pass and ID/passport upload validation for PDF/JPG/JPEG up to 5 MB.
+- Boarding pass and ID/passport upload validation for PDF/PNG/JPG/JPEG up to 5 MB.
 - Initial case status set to `NEW`.
 - Automated backend and frontend test suites.
 - Full-stack Playwright coverage for required validation, connecting-flight behavior, and successful live case creation.
