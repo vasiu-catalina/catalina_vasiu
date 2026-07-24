@@ -1,9 +1,30 @@
-import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom'
 import { CaseEntryForm } from './features/case-entry/CaseEntryForm'
 import { AuthProvider, useAuth, LoginPage, ChangePasswordPage, CreateColleaguePage } from './features/auth'
 import { CaseManagementPage } from './features/case-management'
 import { UserManagementPage } from './features/user-management'
+import { AdminLandingPage, SystemPage } from './features/admin'
 import './App.css'
+
+function AdminHeader() {
+  const { logout } = useAuth()
+  const location = useLocation()
+  const path = location.pathname
+
+  return (
+    <header className="app-header">
+      <Link to="/admin-dashboard" style={{ textDecoration: 'none', color: 'inherit' }}>AirAssist</Link>
+      <nav className="app-nav">
+        <Link to="/admin-dashboard" className={`nav-link${path === '/admin-dashboard' ? ' active' : ''}`}>Dashboard</Link>
+        <Link to="/cases" className={`nav-link${path === '/cases' ? ' active' : ''}`}>Cases</Link>
+        <Link to="/users" className={`nav-link${path === '/users' ? ' active' : ''}`}>Users</Link>
+        <Link to="/admin/create-colleague" className={`nav-link${path === '/admin/create-colleague' ? ' active' : ''}`}>New User</Link>
+        <Link to="/admin/system" className={`nav-link${path === '/admin/system' ? ' active' : ''}`}>System</Link>
+      </nav>
+      <button onClick={logout} className="logout-btn">Logout</button>
+    </header>
+  )
+}
 
 function AppRoutes() {
   const { isAuthenticated, mustChangePassword, logout, user } = useAuth()
@@ -31,31 +52,36 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={
-        <>
-          <header className="app-header">
-            <span>AirAssist</span>
-            <nav className="app-nav">
-              {isAdmin && <Link to="/cases" className="nav-link">Cases</Link>}
-              {isAdmin && <Link to="/users" className="nav-link">Users</Link>}
-              {isAdmin && <Link to="/admin/create-colleague" className="nav-link">Create Colleague</Link>}
-            </nav>
-            <button onClick={logout} className="logout-btn">Logout</button>
-          </header>
-          <CaseEntryForm />
-        </>
-      } />
-      {isAdmin && (
-        <Route path="/cases" element={
+        isAdmin ? <Navigate to="/admin-dashboard" replace /> : (
           <>
             <header className="app-header">
               <span>AirAssist</span>
-              <nav className="app-nav">
-                <Link to="/cases" className="nav-link active">Cases</Link>
-                <Link to="/users" className="nav-link">Users</Link>
-                <Link to="/admin/create-colleague" className="nav-link">Create Colleague</Link>
-              </nav>
               <button onClick={logout} className="logout-btn">Logout</button>
             </header>
+            <CaseEntryForm />
+          </>
+        )
+      } />
+      {isAdmin && (
+        <Route path="/admin-dashboard" element={
+          <>
+            <AdminHeader />
+            <AdminLandingPage />
+          </>
+        } />
+      )}
+      {isAdmin && (
+        <Route path="/admin/system" element={
+          <>
+            <AdminHeader />
+            <SystemPage />
+          </>
+        } />
+      )}
+      {isAdmin && (
+        <Route path="/cases" element={
+          <>
+            <AdminHeader />
             <CaseManagementPage />
           </>
         } />
@@ -63,15 +89,7 @@ function AppRoutes() {
       {isAdmin && (
         <Route path="/users" element={
           <>
-            <header className="app-header">
-              <span>AirAssist</span>
-              <nav className="app-nav">
-                <Link to="/cases" className="nav-link">Cases</Link>
-                <Link to="/users" className="nav-link active">Users</Link>
-                <Link to="/admin/create-colleague" className="nav-link">Create Colleague</Link>
-              </nav>
-              <button onClick={logout} className="logout-btn">Logout</button>
-            </header>
+            <AdminHeader />
             <UserManagementPage />
           </>
         } />
@@ -79,15 +97,7 @@ function AppRoutes() {
       {isAdmin && (
         <Route path="/admin/create-colleague" element={
           <>
-            <header className="app-header">
-              <span>AirAssist</span>
-              <nav className="app-nav">
-                <Link to="/cases" className="nav-link">Cases</Link>
-                <Link to="/users" className="nav-link">Users</Link>
-                <Link to="/admin/create-colleague" className="nav-link active">Create Colleague</Link>
-              </nav>
-              <button onClick={logout} className="logout-btn">Logout</button>
-            </header>
+            <AdminHeader />
             <CreateColleaguePage />
           </>
         } />

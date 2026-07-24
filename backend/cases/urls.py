@@ -1,7 +1,7 @@
 from django.urls import path
 
 from .auth_views import ChangePasswordView, ColleagueCreateView, LoginView, UserDeleteView, UserListView
-from .views import AirportLookupView, CaseCreateView, CaseDetailView, CaseListView, CompensationCalculateView, HealthCheckView
+from .views import AdminNavigationView, AirportLookupView, CaseCreateView, CaseDetailView, CaseListView, CompensationCalculateView, HealthCheckView, SystemInfoView
 
 urlpatterns = [
     path('cases/', CaseCreateView.as_view(), name='case-create'),
@@ -15,4 +15,6 @@ urlpatterns = [
     path('users/', UserListView.as_view(), name='user-list'),
     path('users/<int:user_id>/', UserDeleteView.as_view(), name='user-delete'),
     path('admin/colleagues/', ColleagueCreateView.as_view(), name='colleague-create'),
+    path('admin/navigation/', AdminNavigationView.as_view(), name='admin-navigation'),
+    path('admin/system-info/', SystemInfoView.as_view(), name='system-info'),
 ]

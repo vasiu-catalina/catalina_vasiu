@@ -7,7 +7,9 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Case
+from django.contrib.auth.models import User
+
+from .models import Case, ColleagueProfile
 from .serializers import CaseCreateSerializer, CaseDetailSerializer, CaseListSerializer
 from .services.accounts import create_passenger_account
 from .services.airportgap import AirportLookupError, calculate_distance, search_airports
@@ -181,3 +183,47 @@ def _try_create_passenger_account(case):
 		create_passenger_account(case)
 	except Exception:
 		pass
+
+
+class AdminNavigationView(APIView):
+	permission_classes = [IsAdminUser]
+
+	def get(self, request):
+		sections = [
+			{
+				'key': 'new-user',
+				'label': 'New User',
+				'description': 'Create new colleague accounts',
+				'path': '/admin/create-colleague',
+			},
+			{
+				'key': 'users',
+				'label': 'User Management',
+				'description': 'View and manage user accounts',
+				'path': '/users',
+			},
+			{
+				'key': 'cases',
+				'label': 'Case Management',
+				'description': 'View and manage passenger cases',
+				'path': '/cases',
+			},
+			{
+				'key': 'system',
+				'label': 'System',
+				'description': 'View system information and settings',
+				'path': '/admin/system',
+			},
+		]
+		return Response({'sections': sections})
+
+
+class SystemInfoView(APIView):
+	permission_classes = [IsAdminUser]
+
+	def get(self, request):
+		return Response({
+			'total_cases': Case.objects.count(),
+			'total_users': User.objects.filter(is_superuser=False).count(),
+			'total_colleagues': ColleagueProfile.objects.count(),
+		})
