@@ -1,6 +1,6 @@
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi, beforeEach } from 'vitest'
 
 import { CaseEntryForm } from './CaseEntryForm'
 import * as api from './api'
@@ -69,6 +69,10 @@ async function completeValidForm() {
 }
 
 describe('CaseEntryForm', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
   it('renders the case entry structure', () => {
     render(<CaseEntryForm />)
 
@@ -100,7 +104,7 @@ describe('CaseEntryForm', () => {
   })
 
   it('submits a valid case and shows the created case banner', async () => {
-    vi.mocked(api.createCase).mockResolvedValue({ id: 42, status: 'NEW', reservation_number: 'PNR123' })
+    vi.mocked(api.createCase).mockResolvedValue({ id: 42, status: 'NEW', reservation_number: 'PNR123', distance_km: null, compensation_amount: null })
     render(<CaseEntryForm />)
 
     const user = await completeValidForm()
@@ -108,6 +112,44 @@ describe('CaseEntryForm', () => {
 
     await waitFor(() => expect(api.createCase).toHaveBeenCalledTimes(1))
     expect(await screen.findByText('Case #42 was created successfully with status NEW.')).toBeInTheDocument()
+  })
+
+  it('displays compensation result when distance and amount are calculated', async () => {
+    vi.mocked(api.createCase).mockResolvedValue({
+      id: 55,
+      status: 'NEW',
+      reservation_number: 'PNR456',
+      distance_km: 6189.44,
+      compensation_amount: 600,
+    })
+    render(<CaseEntryForm />)
+
+    const user = await completeValidForm()
+    await user.click(screen.getByRole('button', { name: 'Create compensation case' }))
+
+    await waitFor(() => expect(api.createCase).toHaveBeenCalledTimes(1))
+    expect(await screen.findByText('Case #55 was created successfully with status NEW.')).toBeInTheDocument()
+    expect(screen.getByText('6189 km', { exact: false })).toBeInTheDocument()
+    expect(screen.getByText('€600', { exact: false })).toBeInTheDocument()
+  })
+
+  it('does not display compensation section when distance is null', async () => {
+    vi.mocked(api.createCase).mockResolvedValue({
+      id: 56,
+      status: 'NEW',
+      reservation_number: 'PNR789',
+      distance_km: null,
+      compensation_amount: null,
+    })
+    render(<CaseEntryForm />)
+
+    const user = await completeValidForm()
+    await user.click(screen.getByRole('button', { name: 'Create compensation case' }))
+
+    await waitFor(() => expect(api.createCase).toHaveBeenCalledTimes(1))
+    expect(await screen.findByText('Case #56 was created successfully with status NEW.')).toBeInTheDocument()
+    expect(screen.queryByText('Flight distance:')).not.toBeInTheDocument()
+    expect(screen.queryByText('Compensation amount:')).not.toBeInTheDocument()
   })
 
   it('shows a backend error when submission fails', async () => {

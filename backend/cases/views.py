@@ -6,8 +6,10 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from .models import Case
 from .serializers import CaseCreateSerializer, CaseDetailSerializer
-from .services.airportgap import AirportLookupError, search_airports
+from .services.airportgap import AirportLookupError, calculate_distance, search_airports
+from .services.compensation import calculate_compensation
 
 
 class CaseCreateView(APIView):
@@ -31,7 +33,60 @@ class CaseCreateView(APIView):
 		)
 		serializer.is_valid(raise_exception=True)
 		case = serializer.save()
+
+		# Auto-calculate compensation after case creation
+		_try_calculate_compensation(case)
+
 		return Response(CaseDetailSerializer(case).data, status=status.HTTP_201_CREATED)
+
+
+class CompensationCalculateView(APIView):
+	def post(self, request, case_id):
+		try:
+			case = Case.objects.get(id=case_id)
+		except Case.DoesNotExist:
+			return Response({'detail': 'Case not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+		segments = case.flight_segments.order_by('sequence')
+		if not segments.exists():
+			return Response({'detail': 'No flight segments found.'}, status=status.HTTP_400_BAD_REQUEST)
+
+		from_airport = segments.first().departing_airport_code
+		to_airport = segments.last().destination_airport_code
+
+		try:
+			distance_km = calculate_distance(from_airport, to_airport)
+		except AirportLookupError as exc:
+			return Response({'detail': str(exc)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+		compensation = calculate_compensation(distance_km)
+		case.distance_km = distance_km
+		case.compensation_amount = compensation
+		case.save(update_fields=['distance_km', 'compensation_amount'])
+
+		return Response({
+			'distance_km': float(distance_km),
+			'compensation_amount': compensation,
+			'from_airport': from_airport,
+			'to_airport': to_airport,
+		})
+
+
+def _try_calculate_compensation(case):
+	"""Attempt to calculate compensation; silently fail if API unavailable."""
+	segments = case.flight_segments.order_by('sequence')
+	if not segments.exists():
+		return
+	from_airport = segments.first().departing_airport_code
+	to_airport = segments.last().destination_airport_code
+	try:
+		distance_km = calculate_distance(from_airport, to_airport)
+		compensation = calculate_compensation(distance_km)
+		case.distance_km = distance_km
+		case.compensation_amount = compensation
+		case.save(update_fields=['distance_km', 'compensation_amount'])
+	except AirportLookupError:
+		pass
 
 
 class AirportLookupView(APIView):

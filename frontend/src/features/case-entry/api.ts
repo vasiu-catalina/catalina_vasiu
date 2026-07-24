@@ -22,6 +22,18 @@ export async function createCase(formData: FormData): Promise<CreatedCaseRespons
   return response.data
 }
 
+export interface CompensationResult {
+  distance_km: number
+  compensation_amount: number
+  from_airport: string
+  to_airport: string
+}
+
+export async function calculateCompensation(caseId: number): Promise<CompensationResult> {
+  const response = await apiClient.post<CompensationResult>(`/cases/${caseId}/calculate-compensation/`)
+  return response.data
+}
+
 export function getApiErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
     return error.response?.data?.detail ?? 'We could not submit the case right now.'

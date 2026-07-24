@@ -34,4 +34,6 @@ export interface CreatedCaseResponse {
   id: number
   status: string
   reservation_number: string
+  distance_km: number | null
+  compensation_amount: number | null
 }
