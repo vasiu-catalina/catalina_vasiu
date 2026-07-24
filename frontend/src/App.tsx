@@ -1,10 +1,11 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom'
 import { CaseEntryForm } from './features/case-entry/CaseEntryForm'
 import { AuthProvider, useAuth, LoginPage, ChangePasswordPage } from './features/auth'
+import { UserManagementPage } from './features/user-management'
 import './App.css'
 
 function AppRoutes() {
-  const { isAuthenticated, mustChangePassword, logout } = useAuth()
+  const { isAuthenticated, mustChangePassword, logout, user } = useAuth()
 
   if (!isAuthenticated) {
     return (
@@ -24,17 +25,36 @@ function AppRoutes() {
     )
   }
 
+  const isAdmin = user?.is_staff === true
+
   return (
     <Routes>
       <Route path="/" element={
         <>
           <header className="app-header">
             <span>AirAssist</span>
-            <button onClick={logout} className="logout-btn">Logout</button>
+            <nav className="app-nav">
+              {isAdmin && <Link to="/users" className="nav-link">Users</Link>}
+              <button onClick={logout} className="logout-btn">Logout</button>
+            </nav>
           </header>
           <CaseEntryForm />
         </>
       } />
+      {isAdmin && (
+        <Route path="/users" element={
+          <>
+            <header className="app-header">
+              <span>AirAssist</span>
+              <nav className="app-nav">
+                <Link to="/" className="nav-link">Cases</Link>
+                <button onClick={logout} className="logout-btn">Logout</button>
+              </nav>
+            </header>
+            <UserManagementPage />
+          </>
+        } />
+      )}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
