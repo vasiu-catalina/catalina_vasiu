@@ -100,6 +100,8 @@ class CaseDetailSerializer(serializers.ModelSerializer):
             'reservation_number',
             'gdpr_consent',
             'updates_consent',
+            'distance_km',
+            'compensation_amount',
             'created_at',
             'passenger',
             'flight_segments',

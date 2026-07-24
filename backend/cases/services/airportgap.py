@@ -33,11 +33,32 @@ def _get_json(url: str) -> dict[str, Any]:
     if settings.AIRPORTGAP_API_TOKEN:
         headers['Authorization'] = f"Bearer token={settings.AIRPORTGAP_API_TOKEN}"
     try:
-        response = requests.get(url, headers=headers, timeout=10)
+        response = requests.get(url, headers=headers, timeout=10, verify=not settings.DEBUG)
         response.raise_for_status()
         return response.json()
     except requests.RequestException as exc:
         raise AirportLookupError('Airport lookup is temporarily unavailable.') from exc
+
+
+def calculate_distance(from_code: str, to_code: str) -> float:
+    """Calculate orthodromic distance between two airports in kilometers."""
+    url = f"{settings.AIRPORTGAP_API_BASE_URL}/airports/distance"
+    headers: dict[str, str] = {}
+    if settings.AIRPORTGAP_API_TOKEN:
+        headers['Authorization'] = f"Bearer token={settings.AIRPORTGAP_API_TOKEN}"
+    try:
+        response = requests.post(
+            url,
+            data={'from': from_code, 'to': to_code},
+            headers=headers,
+            timeout=10,
+            verify=not settings.DEBUG,
+        )
+        response.raise_for_status()
+        data = response.json()
+        return float(data['data']['attributes']['kilometers'])
+    except (requests.RequestException, KeyError, ValueError, TypeError) as exc:
+        raise AirportLookupError('Distance calculation is temporarily unavailable.') from exc
 
 
 def _normalize_airport(airport: dict[str, Any]) -> dict[str, str]:

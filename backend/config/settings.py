@@ -74,11 +74,16 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-if 'test' in sys.argv and os.getenv('TEST_DATABASE_ENGINE', 'sqlite') == 'sqlite':
+_use_sqlite = (
+    ('test' in sys.argv and os.getenv('TEST_DATABASE_ENGINE', 'sqlite') == 'sqlite')
+    or os.getenv('DATABASE_ENGINE', '') == 'sqlite'
+)
+
+if _use_sqlite:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'test.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
 else:

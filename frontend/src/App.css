@@ -309,6 +309,16 @@
   background: rgba(48, 181, 105, 0.16);
 }
 
+.compensation-result {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(23, 82, 53, 0.2);
+}
+
+.compensation-result p {
+  margin: 4px 0;
+}
+
 @media (max-width: 900px) {
   .hero-grid,
   .field-grid,
