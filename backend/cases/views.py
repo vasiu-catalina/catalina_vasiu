@@ -8,6 +8,7 @@ from rest_framework.views import APIView
 
 from .models import Case
 from .serializers import CaseCreateSerializer, CaseDetailSerializer
+from .services.accounts import create_passenger_account
 from .services.airportgap import AirportLookupError, calculate_distance, search_airports
 from .services.compensation import calculate_compensation
 
@@ -60,6 +61,9 @@ class CaseCreateView(APIView):
 
 		# Auto-calculate compensation after case creation
 		_try_calculate_compensation(case)
+
+		# Auto-create passenger user account
+		_try_create_passenger_account(case)
 
 		return Response(CaseDetailSerializer(case).data, status=status.HTTP_201_CREATED)
 
@@ -147,3 +151,11 @@ class HealthCheckView(APIView):
 				'database': 'ok',
 			}
 		)
+
+
+def _try_create_passenger_account(case):
+	"""Attempt to create passenger account; silently fail if error."""
+	try:
+		create_passenger_account(case)
+	except Exception:
+		pass

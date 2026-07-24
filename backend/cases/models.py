@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator, RegexValidator
 from django.db import models
@@ -143,3 +144,13 @@ class Disruption(models.Model):
 	airline_mentioned_motive = models.CharField(max_length=16, choices=AirlineMentionedMotive.choices, null=True, blank=True)
 	airline_motive = models.CharField(max_length=32, choices=AirlineMotive.choices, null=True, blank=True)
 	incident_description = models.TextField(blank=True, default='')
+
+
+class PassengerUser(models.Model):
+	user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='passenger_profile')
+	case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name='passenger_users')
+	must_change_password = models.BooleanField(default=True)
+	created_at = models.DateTimeField(auto_now_add=True)
+
+	class Meta:
+		ordering = ['-created_at']
