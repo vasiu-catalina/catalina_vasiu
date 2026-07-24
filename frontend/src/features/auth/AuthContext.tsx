@@ -6,6 +6,7 @@ interface AuthUser {
   first_name: string
   last_name: string
   is_staff?: boolean
+  role?: string | null
 }
 
 interface AuthState {

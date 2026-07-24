@@ -34,3 +34,15 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'email', 'first_name', 'last_name', 'is_active', 'date_joined']
         read_only_fields = fields
+
+
+class ColleagueCreateSerializer(serializers.Serializer):
+    first_name = serializers.CharField(max_length=128)
+    last_name = serializers.CharField(max_length=128)
+    email = serializers.EmailField()
+    password = serializers.CharField(min_length=8, write_only=True)
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError('A user with this email already exists.')
+        return value

@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom'
 import { CaseEntryForm } from './features/case-entry/CaseEntryForm'
-import { AuthProvider, useAuth, LoginPage, ChangePasswordPage } from './features/auth'
+import { AuthProvider, useAuth, LoginPage, ChangePasswordPage, CreateColleaguePage } from './features/auth'
 import { UserManagementPage } from './features/user-management'
 import './App.css'
 
@@ -25,7 +25,7 @@ function AppRoutes() {
     )
   }
 
-  const isAdmin = user?.is_staff === true
+  const isAdmin = user?.is_staff === true || user?.role === 'admin'
 
   return (
     <Routes>
@@ -34,9 +34,11 @@ function AppRoutes() {
           <header className="app-header">
             <span>AirAssist</span>
             <nav className="app-nav">
+            <nav className="app-nav">
               {isAdmin && <Link to="/users" className="nav-link">Users</Link>}
-              <button onClick={logout} className="logout-btn">Logout</button>
+              {isAdmin && <Link to="/admin/create-colleague" className="nav-link">Create Colleague</Link>}
             </nav>
+            <button onClick={logout} className="logout-btn">Logout</button>
           </header>
           <CaseEntryForm />
         </>
@@ -48,10 +50,28 @@ function AppRoutes() {
               <span>AirAssist</span>
               <nav className="app-nav">
                 <Link to="/" className="nav-link">Cases</Link>
-                <button onClick={logout} className="logout-btn">Logout</button>
+                <Link to="/users" className="nav-link active">Users</Link>
+                <Link to="/admin/create-colleague" className="nav-link">Create Colleague</Link>
               </nav>
+              <button onClick={logout} className="logout-btn">Logout</button>
             </header>
             <UserManagementPage />
+          </>
+        } />
+      )}
+      {isAdmin && (
+        <Route path="/admin/create-colleague" element={
+          <>
+            <header className="app-header">
+              <span>AirAssist</span>
+              <nav className="app-nav">
+                <Link to="/" className="nav-link">Cases</Link>
+                <Link to="/users" className="nav-link">Users</Link>
+                <Link to="/admin/create-colleague" className="nav-link active">Create Colleague</Link>
+              </nav>
+              <button onClick={logout} className="logout-btn">Logout</button>
+            </header>
+            <CreateColleaguePage />
           </>
         } />
       )}
