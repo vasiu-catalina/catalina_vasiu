@@ -2,6 +2,7 @@ from pathlib import Path
 
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import RegexValidator
+from django.db import transaction
 from django.utils import timezone
 from rest_framework import serializers
 
@@ -114,6 +115,7 @@ class CaseDetailSerializer(serializers.ModelSerializer):
             'id',
             'status',
             'reservation_number',
+            'colleague',
             'gdpr_consent',
             'updates_consent',
             'distance_km',
@@ -161,6 +163,7 @@ class CaseCreateSerializer(serializers.Serializer):
         self._validate_documents()
         return attrs
 
+    @transaction.atomic
     def create(self, validated_data):
         passenger_data = validated_data.pop('passenger')
         flight_segments_data = validated_data.pop('flight_segments')

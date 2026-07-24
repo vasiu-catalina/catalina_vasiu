@@ -107,7 +107,7 @@ describe('CaseEntryForm', () => {
   })
 
   it('submits a valid case and shows the created case banner', async () => {
-    vi.mocked(api.createCase).mockResolvedValue({ id: 42, status: 'NEW', reservation_number: 'PNR123', distance_km: null, compensation_amount: null })
+    vi.mocked(api.createCase).mockResolvedValue({ id: 42, status: 'NEW', reservation_number: 'PNR123', colleague: null, distance_km: null, compensation_amount: null })
     render(<CaseEntryForm />)
 
     const user = await completeValidForm()
@@ -122,6 +122,7 @@ describe('CaseEntryForm', () => {
       id: 55,
       status: 'NEW',
       reservation_number: 'PNR456',
+      colleague: null,
       distance_km: 6189.44,
       compensation_amount: 600,
     })
@@ -141,6 +142,7 @@ describe('CaseEntryForm', () => {
       id: 56,
       status: 'NEW',
       reservation_number: 'PNR789',
+      colleague: null,
       distance_km: null,
       compensation_amount: null,
     })
@@ -163,5 +165,16 @@ describe('CaseEntryForm', () => {
     await user.click(screen.getByRole('button', { name: 'Create compensation case' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Backend rejected the request.')
+  })
+
+  it('shows colleague as not yet assigned when case is created', async () => {
+    vi.mocked(api.createCase).mockResolvedValue({ id: 99, status: 'NEW', reservation_number: 'PNR999', colleague: null, distance_km: null, compensation_amount: null })
+    render(<CaseEntryForm />)
+
+    const user = await completeValidForm()
+    await user.click(screen.getByRole('button', { name: 'Create compensation case' }))
+
+    await waitFor(() => expect(api.createCase).toHaveBeenCalledTimes(1))
+    expect(await screen.findByText('Not yet assigned')).toBeInTheDocument()
   })
 })

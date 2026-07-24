@@ -1,6 +1,6 @@
 import json
 
-from django.db import connection
+from django.db import connection, IntegrityError
 from django.db.utils import OperationalError
 from rest_framework import status
 from rest_framework.response import Response
@@ -10,6 +10,23 @@ from .models import Case
 from .serializers import CaseCreateSerializer, CaseDetailSerializer
 from .services.airportgap import AirportLookupError, calculate_distance, search_airports
 from .services.compensation import calculate_compensation
+
+
+class CaseListView(APIView):
+	def get(self, request):
+		cases = Case.objects.all()
+		serializer = CaseDetailSerializer(cases, many=True)
+		return Response(serializer.data)
+
+
+class CaseDetailView(APIView):
+	def get(self, request, case_id):
+		try:
+			case = Case.objects.get(id=case_id)
+		except Case.DoesNotExist:
+			return Response({'detail': 'Case not found.'}, status=status.HTTP_404_NOT_FOUND)
+		serializer = CaseDetailSerializer(case)
+		return Response(serializer.data)
 
 
 class CaseCreateView(APIView):
@@ -32,7 +49,14 @@ class CaseCreateView(APIView):
 			},
 		)
 		serializer.is_valid(raise_exception=True)
-		case = serializer.save()
+
+		try:
+			case = serializer.save()
+		except (IntegrityError, OperationalError):
+			return Response(
+				{'detail': 'Failed to save case. Please try again.'},
+				status=status.HTTP_503_SERVICE_UNAVAILABLE,
+			)
 
 		# Auto-calculate compensation after case creation
 		_try_calculate_compensation(case)
