@@ -25,6 +25,7 @@ class DocumentType(models.TextChoices):
 class Case(models.Model):
 	status = models.CharField(max_length=16, choices=CaseStatus.choices, default=CaseStatus.NEW)
 	reservation_number = models.CharField(max_length=64)
+	colleague = models.CharField(max_length=128, null=True, blank=True)
 	gdpr_consent = models.BooleanField()
 	updates_consent = models.BooleanField()
 	distance_km = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)

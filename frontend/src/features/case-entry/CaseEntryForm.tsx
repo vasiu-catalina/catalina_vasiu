@@ -164,6 +164,7 @@ export function CaseEntryForm() {
         {createdCase ? (
           <div className="success-banner" role="status">
             <p>Case #{createdCase.id} was created successfully with status {createdCase.status}.</p>
+            <p><strong>Assigned colleague:</strong> {createdCase.colleague ?? 'Not yet assigned'}</p>
             {createdCase.distance_km != null && createdCase.compensation_amount != null ? (
               <div className="compensation-result">
                 <p><strong>Flight distance:</strong> {Math.round(createdCase.distance_km)} km</p>
