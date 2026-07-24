@@ -3,11 +3,11 @@ from django.core.mail import send_mail
 from django.conf import settings as django_settings
 from rest_framework import status
 from rest_framework.authtoken.models import Token
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .auth_serializers import ChangePasswordSerializer, ColleagueCreateSerializer, LoginSerializer
+from .auth_serializers import ChangePasswordSerializer, ColleagueCreateSerializer, LoginSerializer, UserSerializer
 from .models import ColleagueProfile, ColleagueRole, PassengerUser
 
 
@@ -39,6 +39,7 @@ class LoginView(APIView):
                 'email': user.email,
                 'first_name': user.first_name,
                 'last_name': user.last_name,
+                'is_staff': user.is_staff,
                 'role': role,
             },
         })
@@ -67,6 +68,43 @@ class ChangePasswordView(APIView):
             'detail': 'Password changed successfully.',
             'token': new_token.key,
         })
+
+
+class UserListView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        users = User.objects.filter(is_superuser=False).order_by('date_joined')
+        serializer = UserSerializer(users, many=True)
+        return Response(serializer.data)
+
+
+class UserDeleteView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def delete(self, request, user_id):
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response(
+                {'detail': 'User not found.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if user.is_superuser:
+            return Response(
+                {'detail': 'Cannot delete superuser accounts.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # Soft delete: deactivate user to preserve referential integrity
+        user.is_active = False
+        user.save(update_fields=['is_active'])
+
+        # Revoke auth tokens
+        Token.objects.filter(user=user).delete()
+
+        return Response({'detail': 'User account deleted successfully.'})
 
 
 class ColleagueCreateView(APIView):

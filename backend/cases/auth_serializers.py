@@ -29,6 +29,13 @@ class ChangePasswordSerializer(serializers.Serializer):
         return attrs
 
 
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'first_name', 'last_name', 'is_active', 'date_joined']
+        read_only_fields = fields
+
+
 class ColleagueCreateSerializer(serializers.Serializer):
     first_name = serializers.CharField(max_length=128)
     last_name = serializers.CharField(max_length=128)
