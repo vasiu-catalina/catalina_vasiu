@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .auth_views import ChangePasswordView, LoginView
+from .auth_views import ChangePasswordView, ColleagueCreateView, LoginView
 from .views import AirportLookupView, CaseCreateView, CaseDetailView, CaseListView, CompensationCalculateView, HealthCheckView
 
 urlpatterns = [
@@ -12,4 +12,5 @@ urlpatterns = [
     path('health/', HealthCheckView.as_view(), name='health-check'),
     path('auth/login/', LoginView.as_view(), name='auth-login'),
     path('auth/change-password/', ChangePasswordView.as_view(), name='auth-change-password'),
+    path('admin/colleagues/', ColleagueCreateView.as_view(), name='colleague-create'),
 ]

@@ -38,6 +38,33 @@ export async function changePassword(
   return response.data
 }
 
+export interface CreateColleaguePayload {
+  first_name: string
+  last_name: string
+  email: string
+  password: string
+}
+
+export interface CreateColleagueResponse {
+  id: number
+  email: string
+  first_name: string
+  last_name: string
+  message: string
+}
+
+export async function createColleague(
+  token: string,
+  data: CreateColleaguePayload
+): Promise<CreateColleagueResponse> {
+  const response = await apiClient.post<CreateColleagueResponse>(
+    '/admin/colleagues/',
+    data,
+    { headers: { Authorization: `Token ${token}` } }
+  )
+  return response.data
+}
+
 export function getAuthErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
     const data = error.response?.data
