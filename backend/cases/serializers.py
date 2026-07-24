@@ -5,7 +5,7 @@ from django.core.validators import RegexValidator
 from django.utils import timezone
 from rest_framework import serializers
 
-from .models import Case, CaseStatus, Document, DocumentType, FlightSegment, Passenger, validate_file_size
+from .models import Case, CaseStatus, Disruption, Document, DocumentType, FlightSegment, Passenger, validate_file_size
 from .services.airportgap import AirportLookupError, search_airports
 
 
@@ -87,10 +87,26 @@ class DocumentSerializer(serializers.ModelSerializer):
         return obj.filename
 
 
+class DisruptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Disruption
+        fields = [
+            'disruption_type',
+            'cancellation_notice',
+            'delay_arrival',
+            'voluntary_give_up',
+            'denial_reason',
+            'airline_mentioned_motive',
+            'airline_motive',
+            'incident_description',
+        ]
+
+
 class CaseDetailSerializer(serializers.ModelSerializer):
     passenger = PassengerSerializer(read_only=True)
     flight_segments = FlightSegmentSerializer(many=True, read_only=True)
     documents = DocumentSerializer(many=True, read_only=True)
+    disruption = DisruptionSerializer(read_only=True)
 
     class Meta:
         model = Case
@@ -106,6 +122,7 @@ class CaseDetailSerializer(serializers.ModelSerializer):
             'passenger',
             'flight_segments',
             'documents',
+            'disruption',
         ]
         read_only_fields = fields
 
@@ -116,6 +133,7 @@ class CaseCreateSerializer(serializers.Serializer):
     updates_consent = serializers.BooleanField()
     passenger = PassengerSerializer()
     flight_segments = FlightSegmentSerializer(many=True)
+    disruption = DisruptionSerializer()
 
     def validate(self, attrs):
         flight_segments = attrs['flight_segments']
@@ -146,9 +164,11 @@ class CaseCreateSerializer(serializers.Serializer):
     def create(self, validated_data):
         passenger_data = validated_data.pop('passenger')
         flight_segments_data = validated_data.pop('flight_segments')
+        disruption_data = validated_data.pop('disruption')
         case = Case.objects.create(status=CaseStatus.NEW, **validated_data)
         Passenger.objects.create(case=case, **passenger_data)
         FlightSegment.objects.bulk_create([FlightSegment(case=case, **segment_data) for segment_data in flight_segments_data])
+        Disruption.objects.create(case=case, **disruption_data)
         documents = self.context['documents']
         Document.objects.create(
             case=case,

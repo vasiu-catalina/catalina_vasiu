@@ -85,3 +85,60 @@ class Document(models.Model):
 	@property
 	def filename(self) -> str:
 		return Path(self.file.name).name
+
+
+class DisruptionType(models.TextChoices):
+	CANCELLATION = 'cancellation', 'Cancellation'
+	DELAY = 'delay', 'Delay'
+	DENIED_BOARDING = 'denied_boarding', 'Denied Boarding'
+
+
+class CancellationNotice(models.TextChoices):
+	MORE_THAN_14_DAYS = 'more_than_14_days', 'More than 14 days'
+	LESS_THAN_14_DAYS = 'less_than_14_days', 'Less than 14 days'
+	ON_FLIGHT_DAY = 'on_flight_day', 'On flight day'
+
+
+class DelayArrival(models.TextChoices):
+	LESS_THAN_3H = 'less_than_3h', 'Less than 3 hours'
+	MORE_THAN_3H = 'more_than_3h', 'More than 3 hours'
+	CONNECTION_LOST = 'connection_lost', 'Connection flight lost'
+
+
+class VoluntaryGiveUp(models.TextChoices):
+	YES = 'yes', 'Yes'
+	NO = 'no', 'No'
+
+
+class DenialReason(models.TextChoices):
+	OVERBOOKED = 'overbooked', 'Flight overbooked'
+	AGGRESSIVE_BEHAVIOR = 'aggressive_behavior', 'Aggressive behavior with staff'
+	INTOXICATION = 'intoxication', 'Intoxication'
+	UNSPECIFIED = 'unspecified', 'Unspecified reason'
+
+
+class AirlineMentionedMotive(models.TextChoices):
+	YES = 'yes', 'Yes'
+	NO = 'no', 'No'
+	DONT_KNOW = 'dont_know', "I don't know"
+
+
+class AirlineMotive(models.TextChoices):
+	TECHNICAL = 'technical', 'Technical problem'
+	METEOROLOGICAL = 'meteorological', 'Meteorological conditions'
+	STRIKE = 'strike', 'Strike'
+	AIRPORT_PROBLEMS = 'airport_problems', 'Problems with airport'
+	CREW_PROBLEMS = 'crew_problems', 'Crew problems'
+	OTHER = 'other', 'Other motives'
+
+
+class Disruption(models.Model):
+	case = models.OneToOneField(Case, on_delete=models.CASCADE, related_name='disruption')
+	disruption_type = models.CharField(max_length=32, choices=DisruptionType.choices)
+	cancellation_notice = models.CharField(max_length=32, choices=CancellationNotice.choices, null=True, blank=True)
+	delay_arrival = models.CharField(max_length=32, choices=DelayArrival.choices, null=True, blank=True)
+	voluntary_give_up = models.CharField(max_length=8, choices=VoluntaryGiveUp.choices, null=True, blank=True)
+	denial_reason = models.CharField(max_length=32, choices=DenialReason.choices, null=True, blank=True)
+	airline_mentioned_motive = models.CharField(max_length=16, choices=AirlineMentionedMotive.choices, null=True, blank=True)
+	airline_motive = models.CharField(max_length=32, choices=AirlineMotive.choices, null=True, blank=True)
+	incident_description = models.TextField(blank=True, default='')

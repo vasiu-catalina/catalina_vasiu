@@ -4,17 +4,19 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useFieldArray, useForm } from 'react-hook-form'
 
 import { createCase, getApiErrorMessage } from './api'
+import { DisruptionSection } from './components/DisruptionSection'
 import { DocumentUploadSection } from './components/DocumentUploadSection'
 import { FlightItinerarySection } from './components/FlightItinerarySection'
 import { GdprConsentSection } from './components/GdprConsentSection'
 import { PassengerDetailsSection } from './components/PassengerDetailsSection'
-import { CaseEntryFormSchema, emptyFlight, type CaseEntryFormValues } from './schema'
+import { CaseEntryFormSchema, emptyDisruption, emptyFlight, type CaseEntryFormValues } from './schema'
 import type { CreatedCaseResponse } from './types'
 
 const defaultValues: CaseEntryFormValues = {
   reservationNumber: '',
   flights: [emptyFlight],
   problemFlightIndex: 0,
+  disruption: emptyDisruption,
   gdprConsent: false,
   updatesDecision: 'disagree',
   passenger: {
@@ -87,6 +89,16 @@ export function CaseEntryForm() {
       reservation_number: values.reservationNumber,
       gdpr_consent: values.gdprConsent,
       updates_consent: values.updatesDecision === 'agree',
+      disruption: {
+        disruption_type: values.disruption.disruptionType,
+        cancellation_notice: values.disruption.cancellationNotice || null,
+        delay_arrival: values.disruption.delayArrival || null,
+        voluntary_give_up: values.disruption.voluntaryGiveUp || null,
+        denial_reason: values.disruption.denialReason || null,
+        airline_mentioned_motive: values.disruption.airlineMentionedMotive || null,
+        airline_motive: values.disruption.airlineMotive || null,
+        incident_description: values.disruption.incidentDescription || '',
+      },
       passenger: {
         first_name: values.passenger.firstName,
         last_name: values.passenger.lastName,
@@ -176,25 +188,7 @@ export function CaseEntryForm() {
           setValue={setValue}
         />
 
-        <section className="section-card is-muted">
-          <div className="section-heading">
-            <div>
-              <p className="section-index">Part 2</p>
-              <h2>Disruption details</h2>
-            </div>
-            <p className="section-description">Deferred to Case_03. This release intentionally excludes incident-type and disruption-detail inputs.</p>
-          </div>
-        </section>
-
-        <section className="section-card is-muted">
-          <div className="section-heading">
-            <div>
-              <p className="section-index">Part 3</p>
-              <h2>Disruption motives</h2>
-            </div>
-            <p className="section-description">Deferred to Case_03. Airline-declared motives will be collected in the later eligibility slice.</p>
-          </div>
-        </section>
+        <DisruptionSection register={register} errors={errors} watch={watch} />
 
         <GdprConsentSection register={register} errors={errors} />
 

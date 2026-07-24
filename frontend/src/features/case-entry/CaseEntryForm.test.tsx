@@ -65,6 +65,10 @@ async function completeValidForm() {
   await user.upload(screen.getByLabelText('Boarding pass'), createFile('boarding-pass.pdf', 'application/pdf'))
   await user.upload(screen.getByLabelText('ID or passport'), createFile('passport.png', 'image/png'))
 
+  // Fill disruption section
+  await user.selectOptions(screen.getByLabelText('Type of disruption *'), 'cancellation')
+  await user.type(screen.getByLabelText('Please describe in short what happened'), 'Flight was cancelled.')
+
   return user
 }
 
@@ -77,8 +81,7 @@ describe('CaseEntryForm', () => {
     render(<CaseEntryForm />)
 
     expect(screen.getByText('Flight itinerary')).toBeInTheDocument()
-    expect(screen.getByText('Disruption details')).toBeInTheDocument()
-    expect(screen.getByText('Disruption motives')).toBeInTheDocument()
+    expect(screen.getByText('Disruption Information')).toBeInTheDocument()
     expect(screen.getByText('Email & compliance request')).toBeInTheDocument()
     expect(screen.getByText('Flight details')).toBeInTheDocument()
     expect(screen.getByText('Passenger details')).toBeInTheDocument()
