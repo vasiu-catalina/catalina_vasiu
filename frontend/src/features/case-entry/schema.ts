@@ -79,6 +79,16 @@ export const CaseEntryFormSchema = z
     reservationNumber: z.string().trim().min(1, 'Reservation number is required.'),
     flights: z.array(flightSchema).min(1).max(5, 'You can add up to 4 connecting flights.'),
     problemFlightIndex: z.coerce.number().int().min(0, 'Select the problem flight.'),
+    disruption: z.object({
+      disruptionType: z.string().min(1, 'Disruption type is required.'),
+      cancellationNotice: z.string().optional().default(''),
+      delayArrival: z.string().optional().default(''),
+      voluntaryGiveUp: z.string().optional().default(''),
+      denialReason: z.string().optional().default(''),
+      airlineMentionedMotive: z.string().optional().default(''),
+      airlineMotive: z.string().optional().default(''),
+      incidentDescription: z.string().optional().default(''),
+    }),
     gdprConsent: z.boolean(),
     updatesDecision: consentDecisionSchema,
     passenger: z.object({
@@ -125,4 +135,15 @@ export const emptyFlight = {
   destinationAirportVerified: false,
   plannedDepartureTime: '',
   plannedArrivalTime: '',
+}
+
+export const emptyDisruption = {
+  disruptionType: '',
+  cancellationNotice: '',
+  delayArrival: '',
+  voluntaryGiveUp: '',
+  denialReason: '',
+  airlineMentionedMotive: '',
+  airlineMotive: '',
+  incidentDescription: '',
 }
