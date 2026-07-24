@@ -103,6 +103,24 @@ class DisruptionSerializer(serializers.ModelSerializer):
         ]
 
 
+class CaseListSerializer(serializers.ModelSerializer):
+    flight_number = serializers.SerializerMethodField()
+    flight_date = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Case
+        fields = ['id', 'status', 'created_at', 'flight_number', 'flight_date']
+        read_only_fields = fields
+
+    def get_flight_number(self, obj):
+        segment = obj.flight_segments.order_by('sequence').first()
+        return segment.flight_number if segment else None
+
+    def get_flight_date(self, obj):
+        segment = obj.flight_segments.order_by('sequence').first()
+        return segment.flight_date if segment else None
+
+
 class CaseDetailSerializer(serializers.ModelSerializer):
     passenger = PassengerSerializer(read_only=True)
     flight_segments = FlightSegmentSerializer(many=True, read_only=True)

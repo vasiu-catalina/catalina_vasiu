@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom'
 import { CaseEntryForm } from './features/case-entry/CaseEntryForm'
 import { AuthProvider, useAuth, LoginPage, ChangePasswordPage, CreateColleaguePage } from './features/auth'
+import { CaseManagementPage } from './features/case-management'
 import { UserManagementPage } from './features/user-management'
 import './App.css'
 
@@ -34,7 +35,7 @@ function AppRoutes() {
           <header className="app-header">
             <span>AirAssist</span>
             <nav className="app-nav">
-            <nav className="app-nav">
+              {isAdmin && <Link to="/cases" className="nav-link">Cases</Link>}
               {isAdmin && <Link to="/users" className="nav-link">Users</Link>}
               {isAdmin && <Link to="/admin/create-colleague" className="nav-link">Create Colleague</Link>}
             </nav>
@@ -44,12 +45,28 @@ function AppRoutes() {
         </>
       } />
       {isAdmin && (
+        <Route path="/cases" element={
+          <>
+            <header className="app-header">
+              <span>AirAssist</span>
+              <nav className="app-nav">
+                <Link to="/cases" className="nav-link active">Cases</Link>
+                <Link to="/users" className="nav-link">Users</Link>
+                <Link to="/admin/create-colleague" className="nav-link">Create Colleague</Link>
+              </nav>
+              <button onClick={logout} className="logout-btn">Logout</button>
+            </header>
+            <CaseManagementPage />
+          </>
+        } />
+      )}
+      {isAdmin && (
         <Route path="/users" element={
           <>
             <header className="app-header">
               <span>AirAssist</span>
               <nav className="app-nav">
-                <Link to="/" className="nav-link">Cases</Link>
+                <Link to="/cases" className="nav-link">Cases</Link>
                 <Link to="/users" className="nav-link active">Users</Link>
                 <Link to="/admin/create-colleague" className="nav-link">Create Colleague</Link>
               </nav>
@@ -65,7 +82,7 @@ function AppRoutes() {
             <header className="app-header">
               <span>AirAssist</span>
               <nav className="app-nav">
-                <Link to="/" className="nav-link">Cases</Link>
+                <Link to="/cases" className="nav-link">Cases</Link>
                 <Link to="/users" className="nav-link">Users</Link>
                 <Link to="/admin/create-colleague" className="nav-link active">Create Colleague</Link>
               </nav>
