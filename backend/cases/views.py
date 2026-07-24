@@ -3,20 +3,23 @@ import json
 from django.db import connection, IntegrityError
 from django.db.utils import OperationalError
 from rest_framework import status
+from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Case
-from .serializers import CaseCreateSerializer, CaseDetailSerializer
+from .serializers import CaseCreateSerializer, CaseDetailSerializer, CaseListSerializer
 from .services.accounts import create_passenger_account
 from .services.airportgap import AirportLookupError, calculate_distance, search_airports
 from .services.compensation import calculate_compensation
 
 
 class CaseListView(APIView):
+	permission_classes = [IsAdminUser]
+
 	def get(self, request):
 		cases = Case.objects.all()
-		serializer = CaseDetailSerializer(cases, many=True)
+		serializer = CaseListSerializer(cases, many=True)
 		return Response(serializer.data)
 
 
@@ -28,6 +31,25 @@ class CaseDetailView(APIView):
 			return Response({'detail': 'Case not found.'}, status=status.HTTP_404_NOT_FOUND)
 		serializer = CaseDetailSerializer(case)
 		return Response(serializer.data)
+
+	def get_permissions(self):
+		if self.request.method == 'DELETE':
+			return [IsAdminUser()]
+		return super().get_permissions()
+
+	def delete(self, request, case_id):
+		try:
+			case = Case.objects.get(id=case_id)
+		except Case.DoesNotExist:
+			return Response({'detail': 'Case not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+		# Clean up document files before deleting case
+		for doc in case.documents.all():
+			if doc.file:
+				doc.file.delete(save=False)
+
+		case.delete()
+		return Response({'detail': 'Case deleted successfully.'})
 
 
 class CaseCreateView(APIView):
