@@ -12,6 +12,7 @@ export interface LoginResponse {
     email: string
     first_name: string
     last_name: string
+    is_staff: boolean
   }
 }
 
@@ -33,6 +34,33 @@ export async function changePassword(
   const response = await apiClient.post<ChangePasswordResponse>(
     '/auth/change-password/',
     { new_password: newPassword, confirm_password: confirmPassword },
+    { headers: { Authorization: `Token ${token}` } }
+  )
+  return response.data
+}
+
+export interface CreateColleaguePayload {
+  first_name: string
+  last_name: string
+  email: string
+  password: string
+}
+
+export interface CreateColleagueResponse {
+  id: number
+  email: string
+  first_name: string
+  last_name: string
+  message: string
+}
+
+export async function createColleague(
+  token: string,
+  data: CreateColleaguePayload
+): Promise<CreateColleagueResponse> {
+  const response = await apiClient.post<CreateColleagueResponse>(
+    '/admin/colleagues/',
+    data,
     { headers: { Authorization: `Token ${token}` } }
   )
   return response.data

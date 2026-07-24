@@ -424,3 +424,98 @@
   font: inherit;
   cursor: pointer;
 }
+
+.app-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nav-link {
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(19, 46, 77, 0.08);
+  color: var(--text-strong);
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.nav-link:hover {
+  background: rgba(19, 46, 77, 0.12);
+}
+
+.nav-link.active {
+  background: rgba(209, 124, 54, 0.16);
+  color: var(--accent-strong);
+}
+
+.success-message {
+  padding: 12px 14px;
+  border-radius: 14px;
+  color: #1f6e3e;
+  background: rgba(34, 197, 94, 0.12);
+  font-size: 0.9rem;
+}
+
+/* User management table */
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.user-table th,
+.user-table td {
+  padding: 12px 14px;
+  text-align: left;
+  border-bottom: 1px solid rgba(19, 46, 77, 0.08);
+}
+
+.user-table th {
+  font-size: 0.88rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+  background: rgba(19, 46, 77, 0.03);
+}
+
+.user-table tbody tr:hover {
+  background: rgba(209, 124, 54, 0.06);
+}
+
+.user-inactive {
+  opacity: 0.55;
+}
+
+.status-pill-inactive {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  color: #8e291f;
+  background: rgba(208, 74, 55, 0.12);
+}
+
+.button-delete {
+  padding: 7px 14px;
+  border: 1px solid rgba(166, 43, 31, 0.24);
+  border-radius: 999px;
+  background: rgba(208, 74, 55, 0.1);
+  color: #a62b1f;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.button-delete:hover {
+  background: rgba(208, 74, 55, 0.2);
+}
+
+.confirm-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
