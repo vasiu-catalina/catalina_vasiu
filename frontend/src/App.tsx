@@ -1,10 +1,10 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom'
 import { CaseEntryForm } from './features/case-entry/CaseEntryForm'
-import { AuthProvider, useAuth, LoginPage, ChangePasswordPage } from './features/auth'
+import { AuthProvider, useAuth, LoginPage, ChangePasswordPage, CreateColleaguePage } from './features/auth'
 import './App.css'
 
 function AppRoutes() {
-  const { isAuthenticated, mustChangePassword, logout } = useAuth()
+  const { isAuthenticated, mustChangePassword, logout, user } = useAuth()
 
   if (!isAuthenticated) {
     return (
@@ -24,17 +24,37 @@ function AppRoutes() {
     )
   }
 
+  const isAdmin = user?.role === 'admin'
+
   return (
     <Routes>
       <Route path="/" element={
         <>
           <header className="app-header">
             <span>AirAssist</span>
+            <nav className="app-nav">
+              {isAdmin && <Link to="/admin/create-colleague" className="nav-link">Create Colleague</Link>}
+            </nav>
             <button onClick={logout} className="logout-btn">Logout</button>
           </header>
           <CaseEntryForm />
         </>
       } />
+      {isAdmin && (
+        <Route path="/admin/create-colleague" element={
+          <>
+            <header className="app-header">
+              <span>AirAssist</span>
+              <nav className="app-nav">
+                <Link to="/" className="nav-link">Cases</Link>
+                <Link to="/admin/create-colleague" className="nav-link active">Create Colleague</Link>
+              </nav>
+              <button onClick={logout} className="logout-btn">Logout</button>
+            </header>
+            <CreateColleaguePage />
+          </>
+        } />
+      )}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate
+from django.contrib.auth.models import User
 from rest_framework import serializers
 
 
@@ -26,3 +27,15 @@ class ChangePasswordSerializer(serializers.Serializer):
         if attrs['new_password'] != attrs['confirm_password']:
             raise serializers.ValidationError({'confirm_password': 'Passwords do not match.'})
         return attrs
+
+
+class ColleagueCreateSerializer(serializers.Serializer):
+    first_name = serializers.CharField(max_length=128)
+    last_name = serializers.CharField(max_length=128)
+    email = serializers.EmailField()
+    password = serializers.CharField(min_length=8, write_only=True)
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError('A user with this email already exists.')
+        return value
