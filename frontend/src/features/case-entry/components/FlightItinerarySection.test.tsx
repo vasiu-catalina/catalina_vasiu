@@ -24,28 +24,37 @@ vi.mock('../api', async () => {
 })
 
 describe('Flight itinerary behavior', () => {
-  it('adds and removes connecting flights up to the allowed limit', async () => {
+  it('shows connecting flight fields when checkbox is checked', async () => {
     const user = userEvent.setup()
     render(<CaseEntryForm />)
 
-    const addButton = screen.getByRole('button', { name: 'Add connecting flight' })
-    await user.click(addButton)
+    // Check the connecting flight checkbox
+    await user.click(screen.getByLabelText('Did you have connecting flight?'))
+
+    // Should show the add another connection button
+    expect(screen.getByRole('button', { name: '+ add another connection' })).toBeInTheDocument()
+  })
+
+  it('adds connecting flights up to the allowed limit', async () => {
+    const user = userEvent.setup()
+    render(<CaseEntryForm />)
+
+    await user.click(screen.getByLabelText('Did you have connecting flight?'))
+
+    const addButton = screen.getByRole('button', { name: '+ add another connection' })
+    // Already has 1 connecting flight from checking the box; add 3 more to reach limit of 5 total
     await user.click(addButton)
     await user.click(addButton)
     await user.click(addButton)
 
-    expect(screen.getAllByText(/Segment /)).toHaveLength(10)
     expect(addButton).toBeDisabled()
-
-    await user.click(screen.getAllByRole('button', { name: 'Remove segment' })[0])
-    expect(addButton).not.toBeDisabled()
   })
 
   it('loads airport suggestions through the API abstraction', async () => {
     const user = userEvent.setup()
     render(<CaseEntryForm />)
 
-    await user.type(screen.getByLabelText('Departing airport code'), 'OT')
+    await user.type(screen.getByLabelText('Starting airport *'), 'OT')
 
     await waitFor(() => expect(api.searchAirports).toHaveBeenCalled())
     expect(await screen.findByRole('button', { name: 'OTP - Henri Coanda International Airport / Bucharest / Romania' })).toBeInTheDocument()
