@@ -74,7 +74,9 @@ class UserListView(APIView):
     permission_classes = [IsAdminUser]
 
     def get(self, request):
-        users = User.objects.filter(is_superuser=False).order_by('date_joined')
+        users = User.objects.filter(is_superuser=False).select_related(
+            'colleague_profile', 'passenger_profile'
+        ).order_by('date_joined')
         serializer = UserSerializer(users, many=True)
         return Response(serializer.data)
 

@@ -15,6 +15,18 @@ def main():
             "available on your PYTHONPATH environment variable? Did you "
             "forget to activate a virtual environment?"
         ) from exc
+
+    if 'runserver' in sys.argv:
+        import django
+        django.setup()
+        from django.conf import settings
+        db = settings.DATABASES['default']
+        engine = db['ENGINE'].rsplit('.', 1)[-1]
+        name = db['NAME']
+        host = db.get('HOST', '')
+        port = db.get('PORT', '')
+        print(f"\n[DB] Using {engine} database: {name} @ {host}:{port}\n")
+
     execute_from_command_line(sys.argv)
 
 

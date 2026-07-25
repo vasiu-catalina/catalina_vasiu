@@ -3,6 +3,16 @@ import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../auth'
 import { deleteUser, fetchUsers, type UserRecord } from './api'
 
+function formatRole(role: string | null): string {
+  if (!role) return '—'
+  switch (role) {
+    case 'admin': return 'System Administrator'
+    case 'colleague': return 'Colleague'
+    case 'passenger': return 'Passenger'
+    default: return role
+  }
+}
+
 export function UserManagementPage() {
   const { token } = useAuth()
   const [users, setUsers] = useState<UserRecord[]>([])
@@ -75,7 +85,8 @@ export function UserManagementPage() {
             <tr>
               <th>Name</th>
               <th>Email</th>
-              <th>Status</th>
+              <th>Role</th>
+              <th>Assigned Cases</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -84,11 +95,8 @@ export function UserManagementPage() {
               <tr key={user.id} className={!user.is_active ? 'user-inactive' : ''}>
                 <td>{user.first_name} {user.last_name}</td>
                 <td>{user.email}</td>
-                <td>
-                  <span className={user.is_active ? 'status-pill' : 'status-pill-inactive'}>
-                    {user.is_active ? 'Active' : 'Deactivated'}
-                  </span>
-                </td>
+                <td>{formatRole(user.role)}</td>
+                <td>{user.assigned_cases}</td>
                 <td>
                   {user.is_active && (
                     confirmingId === user.id ? (
