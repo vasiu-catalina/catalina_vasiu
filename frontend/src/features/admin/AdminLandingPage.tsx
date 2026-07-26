@@ -41,9 +41,6 @@ export function AdminLandingPage() {
             Admin Dashboard
           </span>
           <h1 className="text-2xl lg:text-3xl font-bold mb-2">Welcome to AirAssist</h1>
-          <p className="text-indigo-100 text-sm lg:text-base max-w-lg">
-            Manage users, cases, and system settings from one central dashboard.
-          </p>
         </div>
       </div>
 

@@ -1,6 +1,12 @@
 @import "tailwindcss";
 
 /*
+ * Enable class-based dark mode (toggled via .dark on <html>).
+ * Without this, dark: variants only respond to OS prefers-color-scheme.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
  * Custom theme layer for Tailwind v4.
  * 60-30-10 color rule applied via design tokens.
  * Dark mode uses zinc palette for harmony.
