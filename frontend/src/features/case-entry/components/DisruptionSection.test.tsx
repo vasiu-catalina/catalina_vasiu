@@ -7,7 +7,7 @@ import { DisruptionSection } from './DisruptionSection'
 import type { CaseEntryFormValues } from '../schema'
 import { emptyDisruption } from '../schema'
 
-function Wrapper({ children }: { children: React.ReactNode }) {
+export function Wrapper({ children }: { children: React.ReactNode }) {
   const methods = useForm<CaseEntryFormValues>({
     defaultValues: {
       disruption: emptyDisruption,

@@ -5,7 +5,7 @@ import { setupServer } from 'msw/node'
 import { BrowserRouter } from 'react-router-dom'
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 
-import { AuthProvider, useAuth } from './AuthContext'
+import { AuthProvider } from './AuthContext'
 import { LoginPage } from './LoginPage'
 import { ChangePasswordPage } from './ChangePasswordPage'
 

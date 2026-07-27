@@ -11,6 +11,8 @@ export interface UserRecord {
   last_name: string
   is_active: boolean
   date_joined: string
+  role: string | null
+  assigned_cases: number
 }
 
 export async function fetchUsers(token: string): Promise<UserRecord[]> {

@@ -4,6 +4,8 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
+from cases.models import Case, ColleagueProfile, ColleagueRole, PassengerUser
+
 
 class UserListViewTest(TestCase):
     def setUp(self):
@@ -49,6 +51,62 @@ class UserListViewTest(TestCase):
         self.assertIn('last_name', user_data)
         self.assertIn('is_active', user_data)
         self.assertIn('date_joined', user_data)
+        self.assertIn('role', user_data)
+        self.assertIn('assigned_cases', user_data)
+
+    def test_list_users_role_colleague(self):
+        ColleagueProfile.objects.create(user=self.user1, role=ColleagueRole.COLLEAGUE)
+        response = self.client.get('/api/users/')
+        user_data = next(u for u in response.data if u['id'] == self.user1.id)
+        self.assertEqual(user_data['role'], 'colleague')
+
+    def test_list_users_role_admin(self):
+        ColleagueProfile.objects.create(user=self.user1, role=ColleagueRole.ADMIN)
+        response = self.client.get('/api/users/')
+        user_data = next(u for u in response.data if u['id'] == self.user1.id)
+        self.assertEqual(user_data['role'], 'admin')
+
+    def test_list_users_role_passenger(self):
+        case = Case.objects.create(
+            reservation_number='ABC123', gdpr_consent=True, updates_consent=True
+        )
+        PassengerUser.objects.create(user=self.user1, case=case)
+        response = self.client.get('/api/users/')
+        user_data = next(u for u in response.data if u['id'] == self.user1.id)
+        self.assertEqual(user_data['role'], 'passenger')
+
+    def test_list_users_role_none_for_plain_user(self):
+        response = self.client.get('/api/users/')
+        user_data = next(u for u in response.data if u['id'] == self.user1.id)
+        self.assertIsNone(user_data['role'])
+
+    def test_list_users_assigned_cases_passenger(self):
+        case1 = Case.objects.create(
+            reservation_number='ABC123', gdpr_consent=True, updates_consent=True
+        )
+        PassengerUser.objects.create(user=self.user1, case=case1)
+        response = self.client.get('/api/users/')
+        user_data = next(u for u in response.data if u['id'] == self.user1.id)
+        self.assertEqual(user_data['assigned_cases'], 1)
+
+    def test_list_users_assigned_cases_colleague(self):
+        ColleagueProfile.objects.create(user=self.user1, role=ColleagueRole.COLLEAGUE)
+        Case.objects.create(
+            reservation_number='ABC123', gdpr_consent=True, updates_consent=True,
+            colleague='Alice Smith'
+        )
+        Case.objects.create(
+            reservation_number='DEF456', gdpr_consent=True, updates_consent=True,
+            colleague='Alice Smith'
+        )
+        response = self.client.get('/api/users/')
+        user_data = next(u for u in response.data if u['id'] == self.user1.id)
+        self.assertEqual(user_data['assigned_cases'], 2)
+
+    def test_list_users_assigned_cases_zero(self):
+        response = self.client.get('/api/users/')
+        user_data = next(u for u in response.data if u['id'] == self.user1.id)
+        self.assertEqual(user_data['assigned_cases'], 0)
 
     def test_list_users_requires_admin(self):
         regular_token = Token.objects.create(user=self.user1)

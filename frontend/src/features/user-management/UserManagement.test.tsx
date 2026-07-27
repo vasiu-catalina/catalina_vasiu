@@ -16,6 +16,8 @@ const mockUsers = [
     last_name: 'Smith',
     is_active: true,
     date_joined: '2026-07-24T10:00:00Z',
+    role: 'colleague',
+    assigned_cases: 3,
   },
   {
     id: 2,
@@ -24,6 +26,8 @@ const mockUsers = [
     last_name: 'Jones',
     is_active: true,
     date_joined: '2026-07-24T11:00:00Z',
+    role: 'passenger',
+    assigned_cases: 1,
   },
 ]
 
@@ -69,6 +73,17 @@ describe('UserManagementPage', () => {
       expect(screen.getByText('alice@test.com')).toBeInTheDocument()
       expect(screen.getByText('Bob Jones')).toBeInTheDocument()
       expect(screen.getByText('bob@test.com')).toBeInTheDocument()
+    })
+  })
+
+  it('displays role and assigned cases columns', async () => {
+    renderPage()
+
+    await waitFor(() => {
+      expect(screen.getByText('Colleague')).toBeInTheDocument()
+      expect(screen.getByText('Passenger')).toBeInTheDocument()
+      expect(screen.getByText('3')).toBeInTheDocument()
+      expect(screen.getByText('1')).toBeInTheDocument()
     })
   })
 

@@ -30,10 +30,31 @@ class ChangePasswordSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    role = serializers.SerializerMethodField()
+    assigned_cases = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ['id', 'email', 'first_name', 'last_name', 'is_active', 'date_joined']
+        fields = ['id', 'email', 'first_name', 'last_name', 'is_active', 'date_joined', 'role', 'assigned_cases']
         read_only_fields = fields
+
+    def get_role(self, obj):
+        if hasattr(obj, 'colleague_profile'):
+            return obj.colleague_profile.role
+        if hasattr(obj, 'passenger_profile'):
+            return 'passenger'
+        return None
+
+    def get_assigned_cases(self, obj):
+        from .models import Case, PassengerUser
+        count = 0
+        # Passenger cases
+        count += PassengerUser.objects.filter(user=obj).count()
+        # Colleague assigned cases
+        full_name = obj.get_full_name()
+        if full_name:
+            count += Case.objects.filter(colleague=full_name).count()
+        return count
 
 
 class ColleagueCreateSerializer(serializers.Serializer):
